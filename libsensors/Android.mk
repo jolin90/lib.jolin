@@ -9,9 +9,12 @@ LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_CFLAGS := -DLOG_TAG=\"Sensors\" 
-LOCAL_SRC_FILES := sensors.c  \
+LOCAL_SRC_FILES := sensorbase.c \
+					sensors.c  \
 					mxc622x.c \
-					cm36288.c
+					cm36288.c \
+					lis3de.c \
+					msg21xx.c
 
 LOCAL_SHARED_LIBRARIES := liblog libcutils libdl libutils
 LOCAL_PRELINK_MODULE := false

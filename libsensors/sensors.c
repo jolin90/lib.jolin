@@ -2,6 +2,10 @@
 
 extern struct sensors_poll_context_t mxc622x_poll_context_t;
 extern struct sensors_poll_context_t cm36288_poll_context_t;
+extern struct sensors_poll_context_t lis3de_poll_context_t;
+extern struct sensors_poll_context_t msg21xx_poll_context_t;
+
+extern int  open_input(const char* inputName);
 
 struct sensors_poll_context_cfg sensors_poll_context[] = {
 	[0] = {
@@ -11,6 +15,14 @@ struct sensors_poll_context_cfg sensors_poll_context[] = {
 	[1] = {
 		.probe_ok = 0,
 		.sensors_poll_context_t = &cm36288_poll_context_t,
+	},
+	[2] = {
+		.probe_ok = 0,
+		.sensors_poll_context_t = &lis3de_poll_context_t,
+	},
+	[3] = {
+		.probe_ok = 0,
+		.sensors_poll_context_t = &msg21xx_poll_context_t,
 	},
 };
 
@@ -56,6 +68,7 @@ static void process_event(sensors_event_t* data, int code, int value)
 	}
 }
 
+#if 0
 static int open_input(const char* inputName) {
 	int fd = -1;
 	const char *dirname = "/dev/input";
@@ -94,6 +107,7 @@ static int open_input(const char* inputName) {
 	LOGE_IF(fd<0, "couldn't find '%s' input device", inputName);
 	return fd;
 }
+#endif
 
 static int poll__close(struct hw_device_t *dev)
 {

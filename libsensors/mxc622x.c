@@ -28,7 +28,7 @@ static int set_enable(int handle, int enabled);
 
 struct sensors_poll_context_t mxc622x_poll_context_t = 
 {
-	.input_name = "accelerometer",
+	.input_name = "mxc622x_accelerometer",
 	.dev_name = "/dev/mxc622x",
 
 	.dev_fd = -1,
