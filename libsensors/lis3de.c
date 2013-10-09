@@ -7,6 +7,8 @@
 #define	LIS3DE_ACC_IOCTL_SET_ENABLE		_IOW(LIS3DE_ACC_IOCTL_BASE, 2, int)
 #define	LIS3DE_ACC_IOCTL_GET_ENABLE		_IOR(LIS3DE_ACC_IOCTL_BASE, 3, int)
 
+static int lis3de_set_enable(int handle, int enabled);
+
 static  struct sensor_t sSensorList[] =  {
 	{
 		.name = "ST LIS3DH 3-axis Accelerometer",
@@ -21,11 +23,9 @@ static  struct sensor_t sSensorList[] =  {
 	},
 };
 
-static int set_enable(int handle, int enabled);
-
-struct sensors_poll_context_t lis3de_poll_context_t = 
+struct sensors_context lis3de_sensors_context = 
 {
-	.input_name = "lis3de_accelerometer",
+	.input_name = "accelerometer",
 	.dev_name = "/dev/lis3de_acc",
 
 	.dev_fd = -1,
@@ -34,17 +34,22 @@ struct sensors_poll_context_t lis3de_poll_context_t =
 	.sensor_count = ARRAY_SIZE(sSensorList),
 	.sensor_list = sSensorList,
 
-	.set_enable = set_enable,
+	.set_enable = lis3de_set_enable,
 };
 
-static int set_enable(int handle, int enabled)
+static int lis3de_set_enable(int handle, int enabled)
 {
-	int ret = -1;
-	if (lis3de_poll_context_t.dev_fd > 0)
-		ret = ioctl(lis3de_poll_context_t.dev_fd, LIS3DE_ACC_IOCTL_SET_ENABLE, &enabled);
+	int ret = -1, dev_fd;
+	struct sensors_context *sensors_context_t;
 
-	LOGE("%s %d %d %d ret=%d", __func__, handle, enabled, lis3de_poll_context_t.dev_fd, ret);
+	sensors_context_t = &lis3de_sensors_context;
+	dev_fd = sensors_context_t->dev_fd;
 
+	if (dev_fd > 0)
+		ret = ioctl(dev_fd, LIS3DE_ACC_IOCTL_SET_ENABLE, &enabled);
+
+	SENSORS_DEBUG("%s handle:[%d] enable:[%d] dev_fd:[%d]", __func__, handle, enabled, dev_fd);
+	
 	return ret;
 }
 

@@ -1,113 +1,18 @@
 #include "sensors.h"
 
-extern struct sensors_poll_context_t mxc622x_poll_context_t;
-extern struct sensors_poll_context_t cm36288_poll_context_t;
-extern struct sensors_poll_context_t lis3de_poll_context_t;
-extern struct sensors_poll_context_t msg21xx_poll_context_t;
+extern int init_input_context();
+extern int open_input(const char* inputName);
+extern void close_input_unused();
 
-extern int  open_input(const char* inputName);
-
-struct sensors_poll_context_cfg sensors_poll_context[] = {
-	[0] = {
-		.probe_ok = 0,
-		.sensors_poll_context_t = &mxc622x_poll_context_t,
-	},
-	[1] = {
-		.probe_ok = 0,
-		.sensors_poll_context_t = &cm36288_poll_context_t,
-	},
-	[2] = {
-		.probe_ok = 0,
-		.sensors_poll_context_t = &lis3de_poll_context_t,
-	},
-	[3] = {
-		.probe_ok = 0,
-		.sensors_poll_context_t = &msg21xx_poll_context_t,
-	},
-};
+extern int get_sensors_context_lenght();
+extern struct sensors_context_cfg sensors_context_cfg[];
 
 static struct sensors_poll_device sensors_poll_device_dev;
 
 static void process_event(sensors_event_t* data, int code, int value)
 {
-	switch(code)
-	{
-	case ABS_X:
-		data->sensor = 0;
-		data->type = SENSOR_TYPE_ACCELEROMETER;
-		data->acceleration.x = value * CONVERT_A_X;
-		LOGE("%s %d ABS_X=%d x=%d", __func__, __LINE__, ABS_X, (int)data->acceleration.x);
-		break;
-	case ABS_Y:
-		data->sensor = 0;
-		data->type = SENSOR_TYPE_ACCELEROMETER;
-		data->acceleration.y = value * CONVERT_A_Y;
-		LOGE("%s %d ABS_Y=%d y=%d", __func__, __LINE__, ABS_Y, (int)data->acceleration.y);
-		break;
-	case ABS_Z:
-		data->sensor = 0;
-		data->type = SENSOR_TYPE_ACCELEROMETER;
-		data->acceleration.z = value * CONVERT_A_Z;
-		LOGE("%s %d ABS_Z=%d z=%d", __func__, __LINE__, ABS_Z, (int)data->acceleration.z);
-		break;
-	case ABS_DISTANCE:
-		data->sensor = 3;
-		data->type = SENSOR_TYPE_PROXIMITY;
-		data->distance = (float)value;
-		LOGE("%s %d ABS_DISTANCE=%d distance=%d", __func__, __LINE__, ABS_DISTANCE, (int)data->distance);
-		break;
-	case ABS_MISC:
-		data->sensor = 4;
-		data->type = SENSOR_TYPE_LIGHT;
-		data->light = (float)value;
-		LOGE("%s %d ABS_MISC=%d light=%d", __func__, __LINE__, ABS_MISC, (int)data->light);
-		break; 			
-	default:
-		LOGE("%s %d default and code=%d", __func__, __LINE__, code);
-		break;
-	}
+	return;
 }
-
-#if 0
-static int open_input(const char* inputName) {
-	int fd = -1;
-	const char *dirname = "/dev/input";
-	char devname[PATH_MAX];
-	char *filename;
-	DIR *dir;
-	struct dirent *de;
-	dir = opendir(dirname);
-	if(dir == NULL)
-		return -1;
-	strcpy(devname, dirname);
-	filename = devname + strlen(devname);
-	*filename++ = '/';
-	while((de = readdir(dir))) {
-		if(de->d_name[0] == '.' &&
-				(de->d_name[1] == '\0' ||
-				 (de->d_name[1] == '.' && de->d_name[2] == '\0')))
-			continue;
-		strcpy(filename, de->d_name);
-		fd = open(devname, O_RDONLY);
-		if (fd>=0) {
-			char name[80];
-			if (ioctl(fd, EVIOCGNAME(sizeof(name) - 1), &name) < 1) {
-				name[0] = '\0';
-			}
-			if (!strcmp(name, inputName)) {
-				// strcpy(input_name, filename);
-				break;
-			} else {
-				close(fd);
-				fd = -1;
-			}
-		}
-	}
-	closedir(dir);
-	LOGE_IF(fd<0, "couldn't find '%s' input device", inputName);
-	return fd;
-}
-#endif
 
 static int poll__close(struct hw_device_t *dev)
 {
@@ -116,114 +21,161 @@ static int poll__close(struct hw_device_t *dev)
 
 static int poll__activate(struct sensors_poll_device_t *dev, int handle, int enabled)
 {
-	int i, j, m, ret = -1;
-	struct sensor_t * sensor_list_t;
+	int ret;
+	SENSORS_DEBUG("%s %d enabled:[%d]", __func__, handle, enabled);
 
-	LOGE("%s handle=%d, enabled=%d", __func__, handle, enabled);
-
-	for (i = 0; i < (int)ARRAY_SIZE(sensors_poll_context); i++)
-	{
-		if (1 != sensors_poll_context[i].probe_ok) 
-			continue;
-
-		m = 0;
-		for (j = 0; j < (int)sensors_poll_context[i].sensors_poll_context_t->sensor_count; j++) 
-		{
-			sensor_list_t = (struct sensor_t *)(sensors_poll_context[i].sensors_poll_context_t->sensor_list + m);
-			if (sensor_list_t->handle == handle) {
-				sensors_poll_context[i].sensors_poll_context_t->set_enable(handle, enabled);
-				break;
-			}
-			m++;
-		}
-	}
-
+	
 	return 0;
 }
 
 static int poll__setDelay(struct sensors_poll_device_t *dev,  int handle, int64_t ns)
 {
-	LOGE("%s %d", __func__, handle);
+	SENSORS_DEBUG("%s %d", __func__, handle);
 
 	return 0;
 }
 
 static int poll__poll(struct sensors_poll_device_t *dev, sensors_event_t* data, int count)
 {
-	int i;
-	int numEventReceived = 0;
-	ssize_t rdlen;
-	struct input_event evbuff[count], *evbuff_p, *evbuff_p_end;
-	int64_t timestamp;
-	struct pollfd *pollfd_list_temp;
+	while(1)
+		sleep(1);
+	return 0;
+}
 
-	LOGE("\n\n");
-	LOGE("%s start", __func__);
-#if 0 //	debug
-	pollfd_list_temp = (struct pollfd *)(sensors_poll_device_dev.pollfd_list);
+static int init_input(int sensor_cfg_lenght)
+{
+
+	int i;
+	int length, input_fd, dev_fd;
+	struct sensors_context *sensors_context_t;
+
+	length = sensor_cfg_lenght;
+	
+	for (i = 0; i < length ; i++)
+	{
+		sensors_context_t = sensors_context_cfg[i].sensors_context;
+		sensors_context_t->is_probeok = 0;
+
+		SENSORS_DEBUG("%s inputname:%s", __func__, sensors_context_t->input_name);
+
+		if ((input_fd = open_input(sensors_context_t->input_name)) > 0)
+		{
+			sensors_context_t->input_fd = input_fd;
+			sensors_context_t->is_probeok = 1;
+
+			if (sensors_context_t->dev_name != NULL)
+			{
+				SENSORS_DEBUG("%s devname:[%s]", __func__, sensors_context_t->dev_name);
+
+				dev_fd = open(sensors_context_t->dev_name, O_RDWR);
+				if (dev_fd < 0) 
+					SENSORS_LOGE("%s Couldn't open %s (%s)", __func__, sensors_context_t->dev_name, strerror(errno));
+				else 
+					sensors_context_t->dev_fd = dev_fd;
+			}
+			sensors_poll_device_dev.sensor_count += sensors_context_t->sensor_count;
+			sensors_poll_device_dev.pollfd_count++;
+		}
+
+		SENSORS_DEBUG("%s intputfd:[%d], devfd:[%d]", __func__, sensors_context_t->input_fd, sensors_context_t->dev_fd);
+	}
+
+	SENSORS_DEBUG("%s sensor list count is [%d], pollfd count is [%d]", __func__, sensors_poll_device_dev.sensor_count, sensors_poll_device_dev.pollfd_count);
+
+	close_input_unused();
+
+	return 0;
+}
+
+static int init_pollfd(int sensor_cfg_lenght)
+{
+	int i;
+	struct sensors_context *sensors_context_t;
+	struct sensors_context_cfg *sensors_context_cfg_t;
+
+	struct pollfd *pollfd_list_t;
+
+	sensors_poll_device_dev.pollfd_list = (struct pollfd *)malloc(sensors_poll_device_dev.pollfd_count * sizeof(struct pollfd));
+	pollfd_list_t = (struct pollfd *)(sensors_poll_device_dev.pollfd_list);
+
+	for (i = 0; i < sensor_cfg_lenght; i++)
+	{
+		sensors_context_t = sensors_context_cfg[i].sensors_context;
+		if (sensors_context_t->is_probeok == 1)
+		{
+			pollfd_list_t->fd =  sensors_context_t->input_fd;
+			pollfd_list_t->events = POLLIN;
+			pollfd_list_t->revents = 0;
+			pollfd_list_t++;		
+		}
+		sensors_context_cfg_t++;
+	}
+
+#ifdef JOLIN_DEBUG
+	pollfd_list_t = (struct pollfd *)(sensors_poll_device_dev.pollfd_list);
 	for (i = 0; i < (int)sensors_poll_device_dev.pollfd_count; i++)
 	{
-		LOGE("%s input_fd=%d pollfd_count=%d count=%d", __func__, pollfd_list_temp->fd, (int)sensors_poll_device_dev.pollfd_count, count);
-		pollfd_list_temp++;
+		SENSORS_DEBUG("%s fd=%d pollfd_count=%d", __func__, pollfd_list_t->fd, (int)sensors_poll_device_dev.pollfd_count);
+		pollfd_list_t++;
 	}
 #endif
 
-	poll(sensors_poll_device_dev.pollfd_list, sensors_poll_device_dev.pollfd_count, -1);
+	return sensors_poll_device_dev.pollfd_count; 
+}
 
-	timestamp = systemTime(SYSTEM_TIME_MONOTONIC);
+static int init_sensors_list(int sensor_cfg_lenght)
+{
+	int i, count;
+	struct sensor_t *sensor_list_t;
+	struct sensor_t *sensors_list_t;
+	struct sensors_context *sensors_context_t;
 
-	pollfd_list_temp = (struct pollfd *)(sensors_poll_device_dev.pollfd_list);
+	sensors_poll_device_dev.sensor_list = (struct sensor_t*)malloc(sensors_poll_device_dev.sensor_count * sizeof(struct sensor_t));
+	sensors_list_t = sensors_poll_device_dev.sensor_list;
+	memset(sensors_list_t, 0, (sensors_poll_device_dev.sensor_count) * sizeof(struct sensor_t));
 
-	for (i = 0; i < (int)sensors_poll_device_dev.pollfd_count; i++)
+	for (i = 0; i < sensor_cfg_lenght; i++)
 	{
-		if (pollfd_list_temp->revents)
+		sensors_context_t = sensors_context_cfg[i].sensors_context;
+		if (sensors_context_t->is_probeok == 1)
 		{
-			rdlen = read(pollfd_list_temp->fd, evbuff, sizeof(evbuff));
-			LOGE("%s input_fd=%d rdlen=%d", __func__, pollfd_list_temp->fd, (int)rdlen/sizeof(struct input_event));
-			if (rdlen <= 0) 
+			count = sensors_context_t->sensor_count;
+			sensor_list_t 	= sensors_context_t->sensor_list;
+
+			while(count--)
 			{
-				pollfd_list_temp++;
-				continue;
+				sensors_list_t->name    	= sensor_list_t->name;
+				sensors_list_t->vendor  	= sensor_list_t->vendor;
+				sensors_list_t->version 	= sensor_list_t->version;
+				sensors_list_t->handle  	= sensor_list_t->handle;
+				sensors_list_t->type    	      = sensor_list_t->type;
+				sensors_list_t->maxRange 	= sensor_list_t->maxRange;
+				sensors_list_t->resolution    = sensor_list_t->resolution;
+				sensors_list_t->power 		= sensor_list_t->power;
+				sensors_list_t->minDelay 	= sensor_list_t->minDelay;
+
+				sensor_list_t++;
+				sensors_list_t++;
 			}
-			
-			memset(data, 0, sizeof(struct input_event));
-
-			for (evbuff_p = evbuff, evbuff_p_end = evbuff + (int)rdlen/sizeof(struct input_event); evbuff_p < evbuff_p_end; evbuff_p++)
-			{
-				if (evbuff_p->type == EV_SYN)
-				{
-					data->version = sizeof(sensors_event_t);
-					data->timestamp = timestamp;
-					data++;
-					numEventReceived++;
-					LOGE("%s %d EV_SYN", __func__, __LINE__);
-					break;
-				} else if (evbuff_p->type == EV_ABS) {
-					LOGE("%s %d EV_ABS", __func__, __LINE__);
-					process_event(data, evbuff_p->code, evbuff_p->value);
-					continue;
-				}
-			}				
-
-			pollfd_list_temp->revents = 0;
-			LOGE("%s input_fd=%d rdlen=%d", __func__, pollfd_list_temp->fd, (int)rdlen/sizeof(struct input_event));
 		}
-		pollfd_list_temp++;
 	}
-	
-	//LOGE("%s numEventReceived=%d count=%d", __func__, numEventReceived, count);
 
-	LOGE("%s end", __func__);
-	LOGE("\n\n");
-	return numEventReceived;
+#if 1
+	sensors_list_t = sensors_poll_device_dev.sensor_list;
+	for (i = 0; i < (int)sensors_poll_device_dev.sensor_count; i++)
+	{
+		SENSORS_DEBUG("%s name is %s", __func__, sensors_list_t->name);
+	}
+#endif
+
+	return sensors_poll_device_dev.sensor_count;
 }
 
 static int open_sensors(const struct hw_module_t* module, const char* name, struct hw_device_t** device)
 {
-	int i , input_fd, dev_fd;
-	int m ,n, count;
+	int sensor_cfg_length;
 
-	LOGE("%s", __func__);
+	SENSORS_DEBUG("%s is start", __func__);
 
 	memset(&sensors_poll_device_dev, 0, sizeof(struct sensors_poll_device));
 	memset(&sensors_poll_device_dev.device, 0, sizeof(struct sensors_poll_device_t));
@@ -238,100 +190,23 @@ static int open_sensors(const struct hw_module_t* module, const char* name, stru
 
 	*device = &sensors_poll_device_dev.device.common;
 
-	sensors_poll_device_dev.sensors_poll_context_cfg = sensors_poll_context;
+	sensors_poll_device_dev.sensors_context_cfg = sensors_context_cfg;
 	sensors_poll_device_dev.sensor_count = 0;
 	sensors_poll_device_dev.pollfd_count = 0;
 
-	for (i = 0; i < (int)ARRAY_SIZE(sensors_poll_context); i++)
-	{
-		if ((input_fd = open_input(sensors_poll_context[i].sensors_poll_context_t->input_name))  < 0)
-			continue;
-		sensors_poll_context[i].probe_ok = 1;
-		sensors_poll_context[i].sensors_poll_context_t->input_fd = input_fd;
+	sensor_cfg_length = get_sensors_context_lenght();
+	SENSORS_DEBUG("%s sensor_cfg_length=%d", __func__, sensor_cfg_length);
 
-		if ( NULL != sensors_poll_context[i].sensors_poll_context_t->dev_name) 
-		{
-			dev_fd = open(sensors_poll_context[i].sensors_poll_context_t->dev_name, O_RDWR);
-			if (dev_fd < 0) 
-				LOGE("Couldn't open %s (%s)", sensors_poll_context[i].sensors_poll_context_t->dev_name, strerror(errno));
-			else 
-				sensors_poll_context[i].sensors_poll_context_t->dev_fd = dev_fd;
-		}
+	// open input , devices.
+	init_input(sensor_cfg_length);
 
-		sensors_poll_device_dev.sensor_count += sensors_poll_context[i].sensors_poll_context_t->sensor_count;
-		sensors_poll_device_dev.pollfd_count++;
+	// init pollfd
+	init_pollfd(sensor_cfg_length);
 
-		LOGE("%s i=%d input_fd=%d input_name=%s dev_fd=%d", \
-				__func__, i, input_fd, sensors_poll_context[i].sensors_poll_context_t->input_name, \
-				 sensors_poll_context[i].sensors_poll_context_t->dev_fd);
-	}
-
-	//==================================================================================================================
-	// init poll
-	struct pollfd *pollfd_list_temp;
-	sensors_poll_device_dev.pollfd_list = (struct pollfd *)malloc(sensors_poll_device_dev.pollfd_count * sizeof(struct pollfd));
-	pollfd_list_temp = (struct pollfd *)(sensors_poll_device_dev.pollfd_list);
-
-	for (i = 0; i < (int)ARRAY_SIZE(sensors_poll_context); i++)
-	{
-		if (1 == sensors_poll_context[i].probe_ok) 
-		{
-			pollfd_list_temp->fd = sensors_poll_context[i].sensors_poll_context_t->input_fd;
-			pollfd_list_temp->events = POLLIN;
-			pollfd_list_temp->revents = 0;
-			pollfd_list_temp++;
-		}
-	}
-
-#if 1 //	debug
-	pollfd_list_temp = (struct pollfd *)(sensors_poll_device_dev.pollfd_list);
-	for (i = 0; i < (int)sensors_poll_device_dev.pollfd_count; i++)
-	{
-		LOGE("fd=%d pollfd_count=%d", pollfd_list_temp->fd, (int)sensors_poll_device_dev.pollfd_count);
-		pollfd_list_temp++;
-	}
-#endif
-
-	//==================================================================================================================
 	// init sensor_list
-	m = 0;
-	struct sensor_t *sensor_list;
-	struct sensor_t *sensor_list_t;
+	init_sensors_list(sensor_cfg_length);
 
-	sensors_poll_device_dev.sensor_list = (struct sensor_t*)malloc(sensors_poll_device_dev.sensor_count * sizeof(struct sensor_t));
-	memset(sensors_poll_device_dev.sensor_list, 0, sensors_poll_device_dev.sensor_count * sizeof(struct sensor_t));
-
-
-	for (i = 0; i < (int)ARRAY_SIZE(sensors_poll_context); i++)
-	{
-		if (1 == sensors_poll_context[i].probe_ok) 
-		{
-			n = 0;
-			count = sensors_poll_context[i].sensors_poll_context_t->sensor_count;
-			while(count--) 
-			{
-				sensor_list = (struct sensor_t *)(sensors_poll_device_dev.sensor_list + m) ;
-				sensor_list_t = (struct sensor_t *)(sensors_poll_context[i].sensors_poll_context_t->sensor_list + n);
-
-				sensor_list->name = sensor_list_t->name;
-				sensor_list->vendor = sensor_list_t->vendor;
-				sensor_list->version = sensor_list_t->version;
-				sensor_list->handle =  sensor_list_t->handle;
-				sensor_list->type =  sensor_list_t->type;
-				sensor_list->maxRange =  sensor_list_t->maxRange;
-				sensor_list->resolution =  sensor_list_t->resolution;
-				sensor_list->power =  sensor_list_t->power;
-				sensor_list->minDelay =  sensor_list_t->minDelay;
-
-				LOGE("%s i=%d name=%s handle=%d type%d", __func__, i, sensor_list->name, sensor_list->handle, sensor_list->type);
-				m++;
-				n++;
-			}
-		}
-	}
-
-	LOGE("%s %d sensors_poll_device_dev.sensor_count=%d", __func__, __LINE__, sensors_poll_device_dev.sensor_count);
-	LOGE("%s %d sensors_poll_device_dev.sensor_count=%d", __func__, __LINE__, sensors_poll_device_dev.pollfd_count);
+	SENSORS_DEBUG("%s is eng", __func__);
 
 	return 0;
 }

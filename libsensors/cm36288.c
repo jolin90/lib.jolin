@@ -56,15 +56,15 @@ static int set_enable(int handle, int enabled)
 	{
 		if (handle == 4) {
 			ret = ioctl(cm36288_poll_context_t.dev_fd, LTR_IOCTL_SET_LFLAG, &enabled);
-			LOGE("%s %d dev_fd=%d ret=%d handle=%d enabled=%d %s", __func__, __LINE__, cm36288_poll_context_t.dev_fd, ret, handle, enabled, strerror(errno));
+			SENSORS_DEBUG("%s %d dev_fd=%d ret=%d handle=%d enabled=%d %s", __func__, __LINE__, cm36288_poll_context_t.dev_fd, ret, handle, enabled, strerror(errno));
 		}
 		if (handle == 3) {
 			ret = ioctl(cm36288_poll_context_t.dev_fd, LTR_IOCTL_SET_PFLAG, &enabled);
-			LOGE("%s %d dev_fd=%d ret=%d handle=%d enabled=%d %s", __func__, __LINE__, cm36288_poll_context_t.dev_fd, ret, handle, enabled, strerror(errno));
+			SENSORS_DEBUG("%s %d dev_fd=%d ret=%d handle=%d enabled=%d %s", __func__, __LINE__, cm36288_poll_context_t.dev_fd, ret, handle, enabled, strerror(errno));
 		}
 	}
 
-	LOGE("%s %d dev_fd=%d ret=%d handle=%d enabled=%d %s", __func__, __LINE__, cm36288_poll_context_t.dev_fd, ret, handle, enabled, strerror(errno));
+	SENSORS_DEBUG("%s %d dev_fd=%d ret=%d handle=%d enabled=%d %s", __func__, __LINE__, cm36288_poll_context_t.dev_fd, ret, handle, enabled, strerror(errno));
 
 	return ret;
 }

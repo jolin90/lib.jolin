@@ -10,6 +10,8 @@
 #define	MXC622X_ACC_IOCTL_GET_COOR_XYZ       _IOW(MXC622X_ACC_IOCTL_BASE, 22, int)
 #define	MXC622X_ACC_IOCTL_GET_CHIP_ID        _IOR(MXC622X_ACC_IOCTL_BASE, 255, char[32])
 
+static int mxc622x_set_enable(int handle, int enabled);
+
 static  struct sensor_t sSensorList[] =  {
 	{
 		.name = "Memsic MXC622x 2-axis Accelerometer",
@@ -24,9 +26,7 @@ static  struct sensor_t sSensorList[] =  {
 	},
 };
 
-static int set_enable(int handle, int enabled);
-
-struct sensors_poll_context_t mxc622x_poll_context_t = 
+struct sensors_context mxc622x_sensors_context = 
 {
 	.input_name = "mxc622x_accelerometer",
 	.dev_name = "/dev/mxc622x",
@@ -37,16 +37,12 @@ struct sensors_poll_context_t mxc622x_poll_context_t =
 	.sensor_count = ARRAY_SIZE(sSensorList),
 	.sensor_list = sSensorList,
 
-	.set_enable = set_enable,
+	.set_enable = mxc622x_set_enable,
 };
 
-static int set_enable(int handle, int enabled)
+static int mxc622x_set_enable(int handle, int enabled)
 {
 	int ret = -1;
-	if (mxc622x_poll_context_t.dev_fd > 0)
-		ret = ioctl(mxc622x_poll_context_t.dev_fd, MXC622X_ACC_IOCTL_SET_ENABLE, &enabled);
-
-	LOGE("%s %d %d %d ret=%d", __func__, handle, enabled, mxc622x_poll_context_t.dev_fd, ret);
 
 	return ret;
 }
